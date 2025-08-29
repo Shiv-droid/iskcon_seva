@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ISKCON Nahan - Seva Donation</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <style>
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      background: url("https://i.pinimg.com/1200x/04/a8/8b/04a88b922e590ea608f1e2de03b76540.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: #f5e79e; 
+      text-align: center; 
+      padding: 30px;
+      position: relative;
+      z-index: 1;
+      animation: fadeIn 2s ease-in;
+    }
+    /* Dark overlay for readability */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: -1;
+    }
+    h1, h2, h3 { color: #ffd700; text-shadow: 0 0 10px #ffdd55; }
+    .card { 
+      max-width: 450px; 
+      margin: auto; 
+      padding: 25px; 
+      background: rgba(0,0,0,0.8); 
+      border-radius: 20px; 
+      box-shadow: 0px 0px 20px rgba(255, 215, 0, 0.6); 
+      animation: floatUp 1.5s ease-in-out;
+    }
+    .form-group { margin: 15px 0; text-align: left; }
+    label { font-weight: bold; color: #ffd700; }
+    input { 
+      width: 100%; 
+      padding: 10px; 
+      border: 1px solid #ffd700; 
+      border-radius: 8px; 
+      margin-top: 5px; 
+      background: #111; 
+      color: #fff; 
+    }
+    button { 
+      background: linear-gradient(45deg, #ffd700, #e67e22); 
+      color: black; 
+      font-weight: bold; 
+      border: none; 
+      padding: 12px 20px; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      margin-top: 15px; 
+      transition: 0.3s; 
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    }
+    button:hover { 
+      background: linear-gradient(45deg, #e67e22, #ffd700); 
+      transform: scale(1.05); 
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.9);
+    }
+    .hidden { display: none; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes floatUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes glow { 
+      0% { text-shadow: 0 0 5px #ffd700; } 
+      50% { text-shadow: 0 0 20px #ffdd55; } 
+      100% { text-shadow: 0 0 5px #ffd700; } 
+    }
+    h1 { animation: glow 2s infinite alternate; }
+  </style>
+</head>
+<body>
+
+  <h1>✨ ISKCON Centre Nahan ✨</h1>
+  <p>🌸 Offer your seva and be blessed by Sri Sri Radha Krishna 🌸</p>
+
+  <div class="card">
+    <h2>🙏 Seva Donation Form</h2>
+
+    <!-- Step 1: Basic Details -->
+    <form id="step1">
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="name" required>
+      </div>
+      <div class="form-group">
+        <label>Place</label>
+        <input type="text" id="place" required>
+      </div>
+      <button type="submit">Proceed to Donation</button>
+    </form>
+
+    <!-- Step 2: QR Code -->
+    <div id="step2" class="hidden">
+      <p>📿 Scan this QR to make your seva contribution:</p>
+      <canvas id="upi-qr"></canvas>
+      <p><b>UPI ID:</b> amarroots@upi</p>
+      <button onclick="showStep3()">I Have Paid</button>
+    </div>
+
+    <!-- Step 3: Contact Info -->
+    <form id="step3" class="hidden">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="phone" required>
+      </div>
+      <button type="submit">Submit & Get Thank You Letter</button>
+    </form>
+
+    <!-- Step 4: Thank You -->
+    <div id="step4" class="hidden">
+      <h3>🌸 Thank You for Your Seva 🌸</h3>
+      <p id="thankYouMsg"></p>
+      <p>✨ May Lord Krishna bless you and your family with bhakti & peace ✨</p>
+    </div>
+
+  </div>
+
+  <script>
+    // Step 1 → Step 2
+    document.getElementById("step1").addEventListener("submit", function(e){
+      e.preventDefault();
+      document.getElementById("step1").classList.add("hidden");
+      document.getElementById("step2").classList.remove("hidden");
+
+      // Generate QR
+      let upiString = "upi://pay?pa=amarroots@upi&pn=ISKCON%20Nahan&cu=INR";
+      new QRious({
+        element: document.getElementById("upi-qr"),
+        value: upiString,
+        size: 200
+      });
+    });
+
+    // Step 2 → Step 3
+    function showStep3(){
+      document.getElementById("step2").classList.add("hidden");
+      document.getElementById("step3").classList.remove("hidden");
+    }
+
+    // Step 3 → Step 4
+    document.getElementById("step3").addEventListener("submit", function(e){
+      e.preventDefault();
+
+      let donorData = {
+        name: document.getElementById("name").value,
+        place: document.getElementById("place").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value
+      };
+
+      fetch("/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(donorData)
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("step3").classList.add("hidden");
+        document.getElementById("step4").classList.remove("hidden");
+        document.getElementById("thankYouMsg").innerText = data.message;
+      });
+    });
+  </script>
+
+</body>
+</html>
